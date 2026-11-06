@@ -1,14 +1,44 @@
 import { useState } from 'react';
-import { FlatList, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  ActivityIndicator,
+  FlatList,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { router } from 'expo-router';
-import { events } from '../../src/data/events';
+import { useEvents } from '../../src/hooks/useEvents';
 import { EventRow } from '../../src/components/EventRow';
 
 export default function EventsScreen() {
+  const { data, isPending, isError, error, refetch, isRefetching } = useEvents();
   const [savedIds, setSavedIds] = useState<number[]>([]);
   const [query, setQuery] = useState('');
 
-  const filtered = events.filter((e) =>
+  if (isPending) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color="#1d4ed8" />
+        <Text style={styles.statusText}>Loading events</Text>
+      </View>
+    );
+  }
+
+  if (isError) {
+    return (
+      <View style={styles.center}>
+        <Text style={styles.errorTitle}>Could not load events</Text>
+        <Text style={styles.errorText}>{error.message}</Text>
+        <Pressable onPress={() => refetch()} style={styles.button}>
+          <Text style={styles.buttonText}>Try again</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
+  const filtered = data.filter((e) =>
     e.title.toLowerCase().includes(query.toLowerCase())
   );
 
@@ -32,6 +62,8 @@ export default function EventsScreen() {
       <FlatList
         data={filtered}
         keyExtractor={(e) => String(e.id)}
+        refreshing={isRefetching}
+        onRefresh={() => refetch()}
         renderItem={({ item }) => (
           <EventRow
             event={item}
@@ -51,6 +83,40 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
     backgroundColor: '#f3f4f6',
+  },
+  center: {
+    flex: 1,
+    padding: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f3f4f6',
+  },
+  statusText: {
+    fontSize: 16,
+    color: '#4b5563',
+    marginTop: 12,
+  },
+  errorTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#111827',
+    marginBottom: 8,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#b91c1c',
+    marginBottom: 16,
+  },
+  button: {
+    minHeight: 44,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    backgroundColor: '#1d4ed8',
+    justifyContent: 'center',
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
   },
   input: {
     minHeight: 44,
