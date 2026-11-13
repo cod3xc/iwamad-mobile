@@ -10,11 +10,12 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { useEvents } from '../../src/hooks/useEvents';
+import { useSavedIds } from '../../src/hooks/useSavedIds';
 import { EventRow } from '../../src/components/EventRow';
 
 export default function EventsScreen() {
   const { data, isPending, isError, error, refetch, isRefetching } = useEvents();
-  const [savedIds, setSavedIds] = useState<number[]>([]);
+  const { savedIds, toggleSaved } = useSavedIds();
   const [query, setQuery] = useState('');
 
   if (isPending) {
@@ -41,12 +42,6 @@ export default function EventsScreen() {
   const filtered = data.filter((e) =>
     e.title.toLowerCase().includes(query.toLowerCase())
   );
-
-  function toggleSaved(id: number) {
-    setSavedIds((ids) =>
-      ids.includes(id) ? ids.filter((item) => item !== id) : [...ids, id]
-    );
-  }
 
   return (
     <View style={styles.container}>
