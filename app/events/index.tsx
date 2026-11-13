@@ -52,7 +52,7 @@ export default function EventsScreen() {
         onChangeText={setQuery}
       />
       <Text style={styles.hint}>
-        Long-press an event to save it. Saved: {savedIds.length}
+        Swipe or long-press an event to save it. Saved: {savedIds.length}
       </Text>
       <FlatList
         data={filtered}
@@ -64,7 +64,7 @@ export default function EventsScreen() {
             event={item}
             saved={savedIds.includes(item.id)}
             onPress={() => router.push(`/events/${item.id}`)}
-            onLongPress={() => toggleSaved(item.id)}
+            onToggleSaved={() => toggleSaved(item.id)}
           />
         )}
         ListEmptyComponent={<Text style={styles.empty}>No events match</Text>}
