@@ -7,24 +7,27 @@ import {
   ref,
   serverTimestamp,
 } from 'firebase/database';
-import { Platform } from 'react-native';
-import { db } from './firebase';
+import { auth, db } from './firebase';
 
 export type ChatMessage = {
   id: string;
+  uid: string;
   author: string;
   text: string;
   sentAt: number;
   deviceId: string;
 };
 
-const MY_NAME = 'Arslan';
-export const AUTHOR = `${MY_NAME} (${Platform.OS})`;
 export const DEVICE_ID = 'd-' + Math.random().toString(36).slice(2, 10);
 
 export function sendMessage(eventId: number, text: string) {
+  const user = auth.currentUser;
+  if (!user || !user.email) {
+    throw new Error('Sign in to chat');
+  }
   return push(ref(db, `chats/${eventId}`), {
-    author: AUTHOR,
+    uid: user.uid,
+    author: user.email.split('@')[0],
     text,
     sentAt: serverTimestamp(),
     deviceId: DEVICE_ID,

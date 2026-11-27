@@ -1,10 +1,24 @@
+import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Redirect } from 'expo-router';
 import { useAuth } from '../src/context/AuthContext';
 import { signOutUser } from '../src/lib/auth';
+import { decodeTokenPayload } from '../src/lib/jwt';
 
 export default function AccountScreen() {
   const { user, status } = useAuth();
+  const [expiresIn, setExpiresIn] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!user) {
+      setExpiresIn(null);
+      return;
+    }
+    user.getIdToken().then((token) => {
+      const payload = decodeTokenPayload(token);
+      setExpiresIn(Math.round((payload.exp * 1000 - Date.now()) / 60000));
+    });
+  }, [user]);
 
   if (status === 'loading') {
     return (
@@ -21,6 +35,9 @@ export default function AccountScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.email}>Signed in as {user.email}</Text>
+      {expiresIn !== null && (
+        <Text style={styles.meta}>Token expires in {expiresIn} min</Text>
+      )}
       <Pressable
         onPress={() => signOutUser()}
         style={({ pressed }) => [
@@ -55,6 +72,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: '#111827',
+    marginBottom: 8,
+  },
+  meta: {
+    fontSize: 15,
+    color: '#4b5563',
     marginBottom: 16,
   },
   button: {

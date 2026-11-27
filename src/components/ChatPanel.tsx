@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { router } from 'expo-router';
+import { useAuth } from '../context/AuthContext';
 import { sendMessage } from '../lib/chat';
 import { askNotificationPermission } from '../lib/notifications';
 import { useChat } from '../hooks/useChat';
@@ -10,6 +12,7 @@ type ChatPanelProps = {
 };
 
 export function ChatPanel({ eventId, eventTitle }: ChatPanelProps) {
+  const { user } = useAuth();
   const { messages, status } = useChat(eventId, eventTitle);
   const [text, setText] = useState('');
 
@@ -32,28 +35,40 @@ export function ChatPanel({ eventId, eventTitle }: ChatPanelProps) {
   return (
     <View style={styles.panel}>
       <Text style={styles.heading}>Live chat</Text>
-      <View style={styles.inputRow}>
-        <TextInput
-          style={styles.input}
-          placeholder="Write a message"
-          value={text}
-          onChangeText={setText}
-          maxLength={200}
-          returnKeyType="send"
-          onSubmitEditing={handleSend}
-        />
+      {user ? (
+        <View style={styles.inputRow}>
+          <TextInput
+            style={styles.input}
+            placeholder="Write a message"
+            value={text}
+            onChangeText={setText}
+            maxLength={200}
+            returnKeyType="send"
+            onSubmitEditing={handleSend}
+          />
+          <Pressable
+            onPress={handleSend}
+            disabled={!trimmed}
+            style={({ pressed }) => [
+              styles.sendButton,
+              !trimmed && styles.sendButtonDisabled,
+              pressed && trimmed ? styles.sendButtonPressed : null,
+            ]}
+          >
+            <Text style={styles.sendButtonText}>Send</Text>
+          </Pressable>
+        </View>
+      ) : (
         <Pressable
-          onPress={handleSend}
-          disabled={!trimmed}
+          onPress={() => router.push('/login')}
           style={({ pressed }) => [
-            styles.sendButton,
-            !trimmed && styles.sendButtonDisabled,
-            pressed && trimmed ? styles.sendButtonPressed : null,
+            styles.signInButton,
+            pressed && styles.sendButtonPressed,
           ]}
         >
-          <Text style={styles.sendButtonText}>Send</Text>
+          <Text style={styles.sendButtonText}>Sign in to chat</Text>
         </Pressable>
-      </View>
+      )}
 
       {status === 'connecting' && (
         <Text style={styles.statusText}>Connecting</Text>
@@ -112,6 +127,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#1d4ed8',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  signInButton: {
+    minHeight: 44,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    backgroundColor: '#1d4ed8',
+    justifyContent: 'center',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    marginBottom: 12,
   },
   sendButtonPressed: {
     backgroundColor: '#1e40af',
