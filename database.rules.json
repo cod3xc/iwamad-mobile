@@ -1,0 +1,17 @@
+{
+  "rules": {
+    "chats": {
+      "$eventId": {
+        ".read": true,
+        "$messageId": {
+          ".write": "auth != null && !data.exists()",
+          ".validate": "newData.hasChildren(['uid', 'author', 'text', 'sentAt', 'deviceId'])",
+          "uid": { ".validate": "newData.val() === auth.uid" },
+          "author": { ".validate": "auth.token.email.beginsWith(newData.val() + '@')" },
+          "sentAt": { ".validate": "newData.val() === now" },
+          "text": { ".validate": "newData.isString() && newData.val() !== '' && newData.val().length <= 200" }
+        }
+      }
+    }
+  }
+}
